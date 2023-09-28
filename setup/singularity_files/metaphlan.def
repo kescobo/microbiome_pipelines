@@ -1,35 +1,24 @@
 Bootstrap: docker
-From: ubuntu:18.04
-Stage: spython-base
+From: mambaorg/micromamba:1.4.3
+
+%files
+metaphlan/environment.yaml /mambaenv/environment.yaml
 
 %post
-# modified from https://github.com/biobakery/biobakery/blob/master/docker/metaphlan/Dockerfile
 
-# also install python version 2 used by bowtie2
-apt-get update && \
-DEBIAN_FRONTEND="noninteractive" apt-get install -y python python-dev python3 python3-dev python3-pip apt-transport-https openjdk-8-jre wget zip zlib1g-dev libbz2-dev liblzma-dev libjpeg-dev libncurses-dev
-pip3 install boto3 cloudpickle awscli
-apt-get install -y bowtie2 samtools
+micromamba install --quiet -y -n base -f /mambaenv/environment.yaml
+micromamba clean --all --yes
 
-pip3 install numpy
-pip3 install cython
-pip3 install biom-format
+%environment
+export PATH=/opt/conda/bin:$PATH
 
-# install cmseq
-apt-get install -y git
-git clone https://github.com/SegataLab/cmseq.git
-cd cmseq && \
-python3 setup.py install && \
-cd ../ && \
-rm -r cmseq
-
-pip3 install metaphlan==3.1
-metaphlan --install
-
-cd /tmp
 %runscript
-cd /tmp
 exec /bin/bash "$@"
 %startscript
-cd /tmp
 exec /bin/bash "$@"
+
+# mkdir /metaphlan_db
+
+# metaphlan --install --bowtie2_db /metaphlan_db --index mpa_v31_CHOCOPhlAn_201901
+# humann_config --update database_folders protein  /humann_db/uniref90/
+# humann_config --update database_folders utility_mapping  /humann_db/utility_mapping/
